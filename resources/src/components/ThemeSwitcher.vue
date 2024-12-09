@@ -8,7 +8,7 @@
                     <i :class="`dark:text-white pi ${iconClass}`" />
                 </button>
             </li>
-            <li class="relative">
+            <!-- <li class="relative">
                 <button v-styleclass="{
                     selector: '@next',
                     enterFromClass: 'hidden',
@@ -59,7 +59,7 @@
                         <ToggleSwitch :modelValue="rippleActive" @update:modelValue="onRippleChange" />
                     </div>
                 </div>
-            </li>
+            </li> -->
         </ul>
     </div>
 </template>

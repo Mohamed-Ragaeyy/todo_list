@@ -3,7 +3,7 @@ import { RouterView } from 'vue-router';
 </script>
 
 <template>
-    <!-- <ThemeSwitcher /> -->
+     <ThemeSwitcher />
     <Toast />
   <RouterView />
 </template>

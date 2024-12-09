@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->date('date');
             $table->text('description')->nullable();
             $table->enum('task_status', ['pending','canceled', 'completed'])->default('pending');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');

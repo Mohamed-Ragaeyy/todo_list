@@ -27,7 +27,8 @@ class TaskController extends Controller
             $data = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'task_status' => 'required|in:pending,completed',
+                'date' => 'required',
+                'task_status' => 'required|in:pending,canceled,completed',
                 'category_id' => 'required|exists:categories,id',
             ]);
 
@@ -54,7 +55,8 @@ class TaskController extends Controller
             $data = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'task_status' => 'required|in:pending,completed',
+                'date' => 'required|date',
+                'task_status' => 'required|in:pending,canceled,completed',
                 'category_id' => 'required|exists:categories,id',
             ]);
 

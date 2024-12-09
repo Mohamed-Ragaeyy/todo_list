@@ -23,7 +23,8 @@ app.use(PrimeVue, {
             prefix: "p",
             darkModeSelector: ".p-dark",
             cssLayer: false,
-        },
+
+        }
     },
 });
 app.use(AppState);
