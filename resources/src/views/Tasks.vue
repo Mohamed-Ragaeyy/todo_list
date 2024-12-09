@@ -2,54 +2,92 @@
 
     <div class="p-10">
         <div class="card">
-            <Toolbar class="mb-6">
-                <template #start>
-                    <Button label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" outlined @click="confirmDeleteSelected"
-                        :disabled="!selectedTasks || !selectedTasks.length" />
-                </template>
+            <Navbar />
 
-                <template #center v-if="user">
-                    <h1 class="text-xl">Hello {{ user.name }}</h1>
-                </template>
-                <template #end>
-                    <Button label="Logout" icon="pi pi-sign-out" outlined @click="onLogout" />
-                </template>
-            </Toolbar>
             <!-- DataTable -->
             <DataTable ref=" dt" v-model:selection="selectedTasks" :value="tasks" dataKey="id" :paginator="true"
-                :rows="10" :filters="filters"
+                :rows="10" v-model:filters="filters" filterDisplay="menu"
+                :globalFilterFields="['title', 'description', 'category', 'task_status']"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products">
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
-                        <h4 class="m-0">Tasks</h4>
-                        <IconField>
-                            <InputIcon>
-                                <i class="pi pi-search" />
-                            </InputIcon>
-                            <InputText v-model="filters['global'].value" placeholder="Search..." />
-                        </IconField>
+                        <div> <Button label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                            <Button label="Delete" icon="pi pi-trash" severity="danger" outlined
+                                @click="confirmDeleteSelected" :disabled="!selectedTasks || !selectedTasks.length" />
+                        </div>
+                        <div class="flex gap-2">
+                            <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined
+                                @click="initFilters()" />
+
+                            <IconField>
+                                <InputIcon>
+                                    <i class="pi pi-search" />
+                                </InputIcon>
+                                <InputText v-model="filters['global'].value" placeholder="Search..." />
+                            </IconField>
+                        </div>
                     </div>
                 </template>
-
+                <template #empty> No task found. </template>
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="title" header="Title" sortable style="min-width: 12rem"></Column>
-                <Column field="date" header="Date" sortable style="min-width: 12rem">
-                    <template #body="slotProps">
-                        {{ formatDate(slotProps.data.date) }}
+                <Column field="title" header="Title" :showFilterMatchModes="false" sortable style="min-width: 12rem">
+                    <template #body="{ data }">
+                        {{ data.title }}
+                    </template>
+                    <template #filter="{ filterModel, filterCallback }">
+                        <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                            placeholder="Search by title" />
                     </template>
                 </Column>
-                <Column field="description" header="Description" sortable style="min-width: 16rem"></Column>
 
-                <Column field="category.name" header="Category" sortable style="min-width: 10rem"></Column>
-
-                <Column field="task_status" header="Status" sortable style="min-width: 12rem">
-                    <template #body="slotProps">
-                        <Tag :value="slotProps.data.task_status"
-                            :severity="getStatusLabel(slotProps.data.task_status)" />
+                <Column field="description" header="Description" :showFilterMatchModes="false" sortable
+                    style="min-width: 16rem">
+                    <template #body="{ data }">
+                        {{ data.description }}
                     </template>
+                    <template #filter="{ filterModel, filterCallback }">
+                        <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                            placeholder="Search by Description" />
+                    </template>
+                </Column>
+
+                <Column field="category" header="Category" :showFilterMatchModes="false"
+                    :filterMenuStyle="{ width: '14rem' }" sortable sortField="category.name" style="min-width: 10rem">
+                    <template #body="{ data }">
+                        {{ data.category.name }}
+                    </template>
+
+                    <template #filter="{ filterModel }">
+                        <MultiSelect v-model="filterModel.value" :options="categories" optionLabel="name"
+                            placeholder="Any">
+                            <template #option="slotProps">
+                                {{ slotProps.option.name }}
+                            </template>
+                        </MultiSelect>
+                    </template>
+                </Column>
+
+                <Column field="task_status" header="Status" :showFilterMatchModes="false"
+                    :filterMenuStyle="{ width: '14rem' }" sortable style="min-width: 12rem">
+                    <template #body="{ data }">
+                        <Tag :value="data.task_status" :severity="getStatusLabel(data.task_status)" />
+                    </template>
+
+                    <template #filter="{ filterModel }">
+                        <MultiSelect v-model="filterModel.value" :options="statuses" placeholder="Any">
+                            <template #option="slotProps">
+                                <Tag :value="slotProps.option" :severity="getStatusLabel(slotProps.option)" />
+                            </template>
+                        </MultiSelect>
+                    </template>
+                </Column>
+                <Column field="date" header="Date" sortable style="min-width: 12rem">
+                    <template #body="{ data }">
+                        {{ formatDate(data.date) }}
+                    </template>
+
                 </Column>
                 <Column header="Action" :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
@@ -62,7 +100,7 @@
         </div>
         <br>
 
-        <!-- Add & Edit -->
+        <!-- Add & Edit Dialog-->
         <Dialog v-model:visible="taskDialog" :style="{ width: '450px' }" header="Task Details" :modal="true">
             <Form v-slot="$form" :initialValues :resolver @submit="onFormSubmit">
 
@@ -106,7 +144,7 @@
 
             </Form>
         </Dialog>
-        <!-- Delete Task -->
+        <!-- Delete Task Dialog-->
         <Dialog v-model:visible="deleteTaskDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
@@ -117,7 +155,7 @@
                 <Button label="Yes" icon="pi pi-check" @click="deleteTask" />
             </template>
         </Dialog>
-        <!-- Delete Tasks -->
+        <!-- Delete Tasks Dialog-->
 
         <Dialog v-model:visible="deleteTasksDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
@@ -138,12 +176,10 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import { ref, reactive, onMounted } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
-import { useToast } from 'primevue/usetoast';
 import { Form } from '@primevue/forms';
-import { useAuth } from '@/composables/useAuth';
 import { useTasks } from '@/composables/useTasks';
+import Navbar from '../components/Navbar.vue';
 
-const toast = useToast();
 const dt = ref();
 const taskDialog = ref(false);
 const deleteTaskDialog = ref(false);
@@ -152,7 +188,22 @@ const deleteTasksDialog = ref(false);
 const selectedTasks = ref([]);
 const filters = ref({
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    title: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    description: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    category: { value: null, matchMode: FilterMatchMode.IN },
+    task_status: { value: null, matchMode: FilterMatchMode.IN },
+
+
 });
+const initFilters = () => {
+    filters.value = {
+        'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
+        title: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        description: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        category: { value: null, matchMode: FilterMatchMode.IN },
+        task_status: { value: null, matchMode: FilterMatchMode.IN },
+    };
+};
 
 const statuses = ref(['completed', 'pending', 'canceled']);
 const task = ref({});
@@ -165,7 +216,6 @@ let initialValues = reactive({
 });
 
 // Composables
-const { getUser, user, logout } = useAuth();
 const {
     tasks,
     categories,
@@ -174,12 +224,12 @@ const {
     errorMessage,
     createTask,
     updateTask,
-    deleteTaskById
+    deleteTaskById,
+    deleteTasks
 } = useTasks();
 
 // On Mounted
 onMounted(async () => {
-    await getUser();
     await fetchTasks();
     await fetchCategories();
 });
@@ -187,6 +237,7 @@ onMounted(async () => {
 // Methods
 const openNew = () => {
     task.value = {};
+    initialValues = reactive(task.value);
     taskDialog.value = true;
 };
 
@@ -194,17 +245,11 @@ const saveTask = async () => {
     if (task.value.id) {
         // Update Task
         await updateTask(task.value.id, task.value);
-        if (errorMessage.value)
-            toast.add({ severity: 'error', summary: 'Error', detail: errorMessage.value, life: 3000 });
-        else
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Task Updated', life: 3000 });
+
     } else {
         // Create Task
         await createTask(task.value);
-        if (errorMessage.value)
-            toast.add({ severity: 'error', summary: 'Error', detail: errorMessage.value, life: 3000 });
-        else
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Task Created', life: 3000 });
+
     }
     if (!errorMessage.value)
         taskDialog.value = false;
@@ -223,9 +268,7 @@ const confirmDeleteTask = (item) => {
 
 const deleteTask = async () => {
     await deleteTaskById(task.value.id);
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Task Deleted', life: 3000 });
     deleteTaskDialog.value = false;
-    await fetchTasks(); // Refresh tasks
 };
 
 const confirmDeleteSelected = () => {
@@ -235,14 +278,8 @@ const confirmDeleteSelected = () => {
 const deleteSelectedTasks = async () => {
     const idsToDelete = selectedTasks.value.map((t) => t.id);
     console.log(idsToDelete);
-    idsToDelete.forEach(async (id) => {
-        await deleteTaskById(id);
-    });
-    if (errorMessage.value)
-        toast.add({ severity: 'error', summary: 'Error', detail: errorMessage.value, life: 3000 });
-    else toast.add({ severity: 'success', summary: 'Successful', detail: 'Tasks Deleted', life: 3000 });
+    await deleteTasks(idsToDelete);
     deleteTasksDialog.value = false;
-    await fetchTasks(); // Refresh tasks
 };
 
 const getStatusLabel = (status) => {
@@ -279,9 +316,7 @@ const onFormSubmit = ({ valid }) => {
     if (valid) saveTask();
 };
 
-const onLogout = async () => {
-    await logout();
-};
+
 
 const formatDate = (date) => {
     const options = { day: '2-digit', month: '2-digit', year: 'numeric' };

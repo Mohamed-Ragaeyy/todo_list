@@ -108,12 +108,24 @@ export function useAuth() {
     };
 
     // Logout function
-    const logout = () => {
-        // Clear the auth token from localStorage
-        localStorage.removeItem("authToken");
+    const logout = async () => {
+        try {
+            const token = localStorage.getItem("authToken");
+            console.log(token);
+            // Make a POST request to the logout endpoint
+            await axios.post("http://127.0.0.1:8000/api/logout", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+        } catch (error) {
+        } finally {
+            // Clear the auth token from localStorage
+            localStorage.removeItem("authToken");
 
-        // Redirect to the login page
-        router.push({ name: "login" });
+            // Redirect to the login page
+            router.push({ name: "login" });
+        }
     };
 
     const getUser = async () => {
@@ -122,13 +134,10 @@ export function useAuth() {
 
         try {
             const token = localStorage.getItem("authToken");
-            if (!token) {
-                throw new Error("No authentication token found.");
-            }
 
             const response = await axios.get("http://127.0.0.1:8000/api/user", {
                 headers: {
-                      Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
             user.value = response.data; // Store user details
@@ -140,9 +149,17 @@ export function useAuth() {
                 errorMessage.value = "An unexpected error occurred.";
             }
             if (error.status === 401) {
-               logout();
+                logout();
             }
         } finally {
+            if (errorMessage.value)
+                toast.add({
+                    severity: "error",
+                    summary: "Error",
+                    detail: errorMessage.value,
+                    life: 3150,
+                });
+
             isLoading.value = false;
         }
     };

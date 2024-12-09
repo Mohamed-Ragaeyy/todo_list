@@ -1,5 +1,9 @@
 <template>
-    <div class="flex justify-content-center align-items-center min-h-screen bg-surface-50">
+    <div class="card flex justify-end p-2 mb-4">
+        <ThemeSwitcher />
+    </div>
+
+    <div class="flex justify-content-center align-items-center min-h-screen">
         <Card class="text-center m-auto" style="width: 25rem;  hidden">
             <template #title>Register</template>
             <template #subtitle>Register to manage your tasks</template>
@@ -10,20 +14,20 @@
                             <InputText name="name" v-model="user.name" type="text" placeholder="name" fluid />
                             <Message v-if="$form.name?.invalid" severity="error" size="small" variant="simple">{{
                                 $form.name.error?.message
-                            }}</Message>
+                                }}</Message>
                         </div>
                         <div>
                             <InputText name="email" v-model="user.email" type="text" placeholder="Email" fluid />
                             <Message v-if="$form.email?.invalid" severity="error" size="small" variant="simple">{{
                                 $form.email.error?.message
-                            }}</Message>
+                                }}</Message>
                         </div>
                         <div>
                             <Password placeholder="Password" name="password" v-model="user.password" :feedback="true"
                                 fluid toggleMask />
                             <Message v-if="$form.password?.invalid" severity="error" size="small" variant="simple">{{
                                 $form.password.error?.message
-                            }}</Message>
+                                }}</Message>
                         </div>
                         <div>
                             <Password placeholder="Confirm Password" name="confirm_password"
@@ -82,7 +86,7 @@ const resolver = ref(
 const onFormSubmit = ({ valid }) => {
     console.log(user.value);
     if (valid) {
-        register(user.value.name,user.value.email, user.value.password, user.value.confirm_password);
+        register(user.value.name, user.value.email, user.value.password, user.value.confirm_password);
 
     }
 

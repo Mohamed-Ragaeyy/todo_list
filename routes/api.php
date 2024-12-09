@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('tasks', TaskController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::post('tasks/{id}/restore', [TaskController::class, 'restore']);
+    Route::post('/tasks/bulk-destroy', [TaskController::class, 'bulkDestroy']); 
     Route::get('user', [UserController::class, 'profile']);
     Route::post('logout', [UserController::class, 'logout']);
 });

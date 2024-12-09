@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 class TaskController extends Controller
 {
     use ResponseData;
+
     public function index()
     {
         try {
@@ -27,7 +28,7 @@ class TaskController extends Controller
             $data = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'date' => 'required',
+                'date' => 'required|date',
                 'task_status' => 'required|in:pending,canceled,completed',
                 'category_id' => 'required|exists:categories,id',
             ]);
@@ -43,7 +44,6 @@ class TaskController extends Controller
             return $this->responseData(null, $th->getMessage(), false, 500);
         }
     }
-
 
     public function update(Request $request, Task $task)
     {
@@ -84,6 +84,26 @@ class TaskController extends Controller
         }
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'ids' => 'required|array',
+                'ids.*' => 'exists:tasks,id',
+            ]);
+
+            $userId = auth()->id();
+
+            Task::whereIn('id', $data['ids'])->where('user_id', $userId)->delete();
+
+            return $this->responseData(null, 'Bulk delete successful', true, 200);
+        } catch (ValidationException $e) {
+            $errors = $e->errors();
+            return $this->responseData(null, $errors, false, 422);
+        } catch (\Throwable $th) {
+            return $this->responseData(null, $th->getMessage(), false, 500);
+        }
+    }
 
     public function restore($id)
     {
@@ -91,7 +111,7 @@ class TaskController extends Controller
             $task = Task::withTrashed()->where('id', $id)->where('user_id', auth()->id())->firstOrFail();
             $task->restore();
             return $this->responseData($task, 'restored success', true, 200);
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             return $this->responseData(null, $th->getMessage(), false, 500);
         }
     }

@@ -1,4 +1,6 @@
 <template>
+               <div class="card flex justify-end p-2 mb-4"> <ThemeSwitcher /></div>
+
     <div class="flex justify-content-center align-items-center min-h-screen  ">
         <Card  class="text-center  m-auto" style="width: 25rem;  hidden">
             <template #title>Login</template>
